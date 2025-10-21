@@ -6,6 +6,7 @@ import { getHighlightedPreview } from '../utils/highlight.js';
 import { copyToClipboard, showCopySuccess, showCopyError } from '../utils/copy.js';
 import { HiBookmark } from 'react-icons/hi';
 import { useState, useRef, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import './TextCard.css';
 
 interface TextCardProps {
@@ -17,6 +18,7 @@ interface TextCardProps {
   isSelected?: boolean;
   onSelectionChange?: (selected: boolean) => void;
   showCheckbox?: boolean;
+  index?: number; // 添加索引用于交错动画
 }
 
 /**
@@ -30,7 +32,8 @@ export function TextCard({
   onCopy,
   isSelected = false,
   onSelectionChange,
-  showCheckbox = false
+  showCheckbox = false,
+  index = 0
 }: TextCardProps) {
   const [spotlightPosition, setSpotlightPosition] = useState<{ x: number; y: number } | null>(null);
   const [isSpotlightActive, setIsSpotlightActive] = useState(false);
@@ -140,10 +143,72 @@ export function TextCard({
 
   const preview = getHighlightedPreview(item.text, searchText, 100);
 
+  // 定义动画变体
+  const cardVariants = {
+    hidden: {
+      opacity: 0,
+      y: 50,
+      scale: 0.9,
+      rotateX: -15,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      rotateX: 0,
+      transition: {
+        duration: 0.6,
+        delay: index * 0.1, // 交错动画延迟
+        ease: [0.25, 0.46, 0.45, 0.94] as const, // 自定义缓动函数
+        type: "spring" as const,
+        stiffness: 100,
+        damping: 15
+      }
+    },
+    exit: {
+      opacity: 0,
+      y: -30,
+      scale: 0.95,
+      transition: {
+        duration: 0.3,
+        ease: "easeInOut" as const
+      }
+    }
+  };
+
+  // 定义聚光灯动画变体
+  const spotlightVariants = {
+    hidden: {
+      scale: 0,
+      opacity: 0
+    },
+    visible: {
+      scale: 1,
+      opacity: 1,
+      transition: {
+        duration: 0.4,
+        ease: "easeOut" as const
+      }
+    },
+    exit: {
+      scale: 1.2,
+      opacity: 0,
+      transition: {
+        duration: 0.3,
+        ease: "easeIn" as const
+      }
+    }
+  };
+
   return (
-    <div 
+    <motion.div 
       ref={cardRef}
       className={`text-card ${item.isPinned ? 'text-card--pinned' : ''} ${isSelected ? 'text-card--selected' : ''} ${showCheckbox ? 'text-card--with-checkbox' : ''} ${isSpotlightActive ? 'text-card--spotlight' : ''}`}
+      variants={cardVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      layout
       onClick={handleNativeClick}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
@@ -156,8 +221,12 @@ export function TextCard({
     >
       {/* 聚光灯效果 */}
       {spotlightPosition && (
-        <div 
+        <motion.div 
           className="text-card__spotlight"
+          variants={spotlightVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
           style={{
             left: spotlightPosition.x,
             top: spotlightPosition.y,
@@ -213,6 +282,6 @@ export function TextCard({
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

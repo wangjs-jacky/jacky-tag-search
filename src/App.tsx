@@ -13,6 +13,7 @@ import { useSearch } from './hooks/useSearch.js';
 import { copyToClipboard, showCopySuccess, showCopyError } from './utils/copy.js';
 import { autoCleanTrash, moveToTrash, restoreFromTrash, clearTrash } from './utils/trash.js';
 import { validateImportData } from './utils/storage.js';
+import { AnimatePresence } from 'framer-motion';
 import './App.css';
 
 // 示例数据
@@ -390,19 +391,22 @@ export default function App() {
           renderEmptyState()
         ) : (
           <div className="app__content">
-            {searchResults.map((item) => (
-              <TextCard
-                key={item.id}
-                item={item}
-                searchText={searchText}
-                onClick={() => setSelectedItem(item)}
-                onLongPress={() => handleLongPress(item)}
-                onCopy={handleCardCopy}
-                isSelected={selectedIds.includes(item.id)}
-                onSelectionChange={(selected) => handleMultiSelect(item.id, selected)}
-                showCheckbox={isMultiSelecting}
-              />
-            ))}
+            <AnimatePresence mode="popLayout">
+              {searchResults.map((item, index) => (
+                <TextCard
+                  key={item.id}
+                  item={item}
+                  searchText={searchText}
+                  onClick={() => setSelectedItem(item)}
+                  onLongPress={() => handleLongPress(item)}
+                  onCopy={handleCardCopy}
+                  isSelected={selectedIds.includes(item.id)}
+                  onSelectionChange={(selected) => handleMultiSelect(item.id, selected)}
+                  showCheckbox={isMultiSelecting}
+                  index={index}
+                />
+              ))}
+            </AnimatePresence>
           </div>
         )}
       </main>
