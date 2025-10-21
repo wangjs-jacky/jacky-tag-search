@@ -11,7 +11,7 @@ import { ActionSheet } from './components/ActionSheet.js';
 import { useLocalStorage } from './hooks/useLocalStorage.js';
 import { useSearch } from './hooks/useSearch.js';
 import { copyToClipboard, showCopySuccess, showCopyError } from './utils/copy.js';
-import { autoCleanTrash, moveToTrash, restoreFromTrash } from './utils/trash.js';
+import { autoCleanTrash, moveToTrash, restoreFromTrash, clearTrash } from './utils/trash.js';
 import { validateImportData } from './utils/storage.js';
 import './App.css';
 
@@ -69,7 +69,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<TextItem | null>(null);
   const [editingItem, setEditingItem] = useState<TextItem | undefined>(undefined);
-  const [isMultiSelecting] = useState(false);
+  const [isMultiSelecting, setIsMultiSelecting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [actionSheetVisible, setActionSheetVisible] = useState(false);
   const [actionSheetItem, setActionSheetItem] = useState<TextItem | null>(null);
@@ -81,6 +81,8 @@ export default function App() {
     addItem, 
     updateItem, 
     deleteItem, 
+    batchDelete,
+    batchUpdate,
     replaceAll 
   } = useLocalStorage();
 
@@ -139,6 +141,11 @@ export default function App() {
         }
         break;
 
+      case 'multiSelect':
+        setIsMultiSelecting(true);
+        setSelectedIds([targetItem.id]);
+        break;
+
       case 'pin':
         updateItem(targetItem.id, { 
           isPinned: true, 
@@ -179,12 +186,90 @@ export default function App() {
     }
   }, [selectedItem, actionSheetItem, actionSheetVisible, updateItem, deleteItem]);
 
+  // 处理多选
+  const handleMultiSelect = useCallback((itemId: string, selected: boolean) => {
+    if (selected) {
+      setSelectedIds(prev => [...prev, itemId]);
+    } else {
+      setSelectedIds(prev => prev.filter(id => id !== itemId));
+    }
+  }, []);
+
+  // 退出多选模式
+  const exitMultiSelect = useCallback(() => {
+    setIsMultiSelecting(false);
+    setSelectedIds([]);
+  }, []);
+
+  // 批量删除
+  const handleBatchDelete = useCallback(() => {
+    if (selectedIds.length === 0) return;
+    
+    const action = currentView === 'trash' ? '永久删除' : '移入回收站';
+    if (confirm(`确定要${action}选中的 ${selectedIds.length} 个笔记吗？`)) {
+      if (currentView === 'trash') {
+        // 回收站：永久删除
+        batchDelete(selectedIds);
+      } else {
+        // 普通视图：移入回收站
+        const updates = selectedIds.map(id => {
+          const item = items.find(i => i.id === id);
+          if (item) {
+            const updatedItem = moveToTrash(item);
+            return { id, updates: updatedItem };
+          }
+          return null;
+        }).filter(Boolean) as Array<{ id: string; updates: TextItem }>;
+        
+        batchUpdate(updates);
+      }
+      exitMultiSelect();
+    }
+  }, [selectedIds, currentView, batchDelete, batchUpdate, items, exitMultiSelect]);
+
+  // 批量恢复
+  const handleBatchRestore = useCallback(() => {
+    if (selectedIds.length === 0) return;
+    
+    if (confirm(`确定要恢复选中的 ${selectedIds.length} 个笔记吗？`)) {
+      const updates = selectedIds.map(id => {
+        const item = items.find(i => i.id === id);
+        if (item) {
+          const restoredItem = restoreFromTrash(item);
+          return { id, updates: restoredItem };
+        }
+        return null;
+      }).filter(Boolean) as Array<{ id: string; updates: TextItem }>;
+      
+      batchUpdate(updates);
+      exitMultiSelect();
+    }
+  }, [selectedIds, items, batchUpdate, exitMultiSelect]);
+
   // 处理卡片双击复制
   const handleCardCopy = useCallback((item: TextItem) => {
     updateItem(item.id, { 
       copyCount: item.copyCount + 1 
     });
   }, [updateItem]);
+
+  // 处理清空回收站
+  const handleClearTrash = useCallback(() => {
+    const deletedCount = items.filter(item => item.isDeleted).length;
+    
+    if (deletedCount === 0) {
+      alert('回收站已经是空的');
+      return;
+    }
+    
+    const confirmed = confirm(`确定要清空回收站吗？\n\n这将永久删除 ${deletedCount} 条记录，此操作不可恢复。`);
+    
+    if (confirmed) {
+      const clearedItems = clearTrash(items);
+      replaceAll(clearedItems);
+      alert(`已清空回收站，删除了 ${deletedCount} 条记录`);
+    }
+  }, [items, replaceAll]);
 
   // 处理文本保存
   const handleSaveItem = useCallback((item: TextItem) => {
@@ -199,15 +284,6 @@ export default function App() {
     }
     setEditingItem(undefined);
   }, [editingItem, selectedItem, updateItem, addItem]);
-
-  // 处理多选
-  const handleMultiSelect = useCallback((itemId: string, selected: boolean) => {
-    if (selected) {
-      setSelectedIds(prev => [...prev, itemId]);
-    } else {
-      setSelectedIds(prev => prev.filter(id => id !== itemId));
-    }
-  }, []);
 
   // 导出数据
   const handleExport = useCallback(() => {
@@ -292,6 +368,11 @@ export default function App() {
         searchText={searchText}
         onSearchTextChange={updateSearchText}
         onSearchClear={clearSearch}
+        isMultiSelecting={isMultiSelecting}
+        selectedCount={selectedIds.length}
+        onBatchDelete={handleBatchDelete}
+        onBatchRestore={handleBatchRestore}
+        onExitMultiSelect={exitMultiSelect}
       />
 
       <Sidebar
@@ -301,6 +382,7 @@ export default function App() {
         onViewChange={setCurrentView}
         onExport={handleExport}
         onImport={handleImport}
+        onClearTrash={handleClearTrash}
       />
 
       <main className="app__main">
@@ -355,6 +437,7 @@ export default function App() {
       <ActionSheet
         isVisible={actionSheetVisible}
         item={actionSheetItem}
+        currentView={currentView}
         onClose={() => {
           setActionSheetVisible(false);
           setActionSheetItem(null);

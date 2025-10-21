@@ -1,6 +1,6 @@
 import { ViewType } from '../types/index.js';
 import { VIEW_CONFIGS } from '../constants/index.js';
-import { HiX, HiDownload, HiUpload } from 'react-icons/hi';
+import { HiX, HiDownload, HiUpload, HiTrash } from 'react-icons/hi';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -10,6 +10,7 @@ interface SidebarProps {
   onViewChange: (view: ViewType) => void;
   onExport: () => void;
   onImport: () => void;
+  onClearTrash?: () => void;
 }
 
 /**
@@ -21,7 +22,8 @@ export function Sidebar({
   onClose,
   onViewChange,
   onExport,
-  onImport
+  onImport,
+  onClearTrash
 }: SidebarProps) {
   const handleViewChange = (view: ViewType) => {
     onViewChange(view);
@@ -91,6 +93,19 @@ export function Sidebar({
               <span className="sidebar__item-icon"><HiUpload /></span>
               <span className="sidebar__item-text">导入数据</span>
             </button>
+            
+            {currentView === 'trash' && onClearTrash && (
+              <button
+                className="sidebar__item sidebar__item--danger"
+                onClick={() => {
+                  onClearTrash();
+                  onClose();
+                }}
+              >
+                <span className="sidebar__item-icon"><HiTrash /></span>
+                <span className="sidebar__item-text">清空回收站</span>
+              </button>
+            )}
           </div>
         </nav>
       </aside>

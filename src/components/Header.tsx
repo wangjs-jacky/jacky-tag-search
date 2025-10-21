@@ -1,5 +1,5 @@
 import { ViewType } from '../types/index.js';
-import { HiMenu, HiSearch, HiArrowLeft, HiX } from 'react-icons/hi';
+import { HiMenu, HiSearch, HiArrowLeft, HiX, HiTrash, HiRefresh } from 'react-icons/hi';
 import './Header.css';
 
 interface HeaderProps {
@@ -11,20 +11,30 @@ interface HeaderProps {
   searchText?: string;
   onSearchTextChange?: (text: string) => void;
   onSearchClear?: () => void;
+  isMultiSelecting?: boolean;
+  selectedCount?: number;
+  onBatchDelete?: () => void;
+  onBatchRestore?: () => void;
+  onExitMultiSelect?: () => void;
 }
 
 /**
  * 顶部导航栏组件
  */
 export function Header({
-  currentView: _currentView,
+  currentView,
   onMenuClick,
   onSearchClick,
   isSearching = false,
   onBackClick,
   searchText = '',
   onSearchTextChange,
-  onSearchClear
+  onSearchClear,
+  isMultiSelecting = false,
+  selectedCount = 0,
+  onBatchDelete,
+  onBatchRestore,
+  onExitMultiSelect
 }: HeaderProps) {
   if (isSearching) {
     return (
@@ -54,6 +64,44 @@ export function Header({
           >
             <HiX />
           </button>
+        )}
+      </header>
+    );
+  }
+
+  if (isMultiSelecting) {
+    return (
+      <header className="header header--multi-select">
+        <button 
+          className="header__back-button"
+          onClick={onExitMultiSelect}
+          aria-label="取消多选"
+        >
+          <HiX />
+        </button>
+        <div className="header__title">
+          已选择 {selectedCount} 项
+        </div>
+        {selectedCount > 0 && (
+          <>
+            {currentView === 'trash' ? (
+              <button 
+                className="header__restore-button"
+                onClick={onBatchRestore}
+                aria-label="恢复选中项"
+              >
+                <HiRefresh />
+              </button>
+            ) : (
+              <button 
+                className="header__delete-button"
+                onClick={onBatchDelete}
+                aria-label="删除选中项"
+              >
+                <HiTrash />
+              </button>
+            )}
+          </>
         )}
       </header>
     );

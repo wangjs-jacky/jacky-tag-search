@@ -129,3 +129,19 @@
   color: #262626;
   flex: 1;
 }
+
+.sidebar__item--danger {
+  color: #ff4d4f;
+}
+
+.sidebar__item--danger .sidebar__item-icon {
+  color: #ff4d4f;
+}
+
+.sidebar__item--danger .sidebar__item-text {
+  color: #ff4d4f;
+}
+
+.sidebar__item--danger:active {
+  background-color: #fff2f0;
+}
