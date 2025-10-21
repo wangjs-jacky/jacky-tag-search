@@ -14,12 +14,6 @@
   font-weight: 500;
 }
 
-.floating-button:hover {
-  background: #40a9ff;
-  transform: scale(1.1);
-  box-shadow: 0 6px 16px rgba(24, 144, 255, 0.5);
-}
-
 .floating-button:active {
   transform: scale(0.95);
 }
@@ -41,9 +35,6 @@
   transform: translateX(-50%);
 }
 
-.floating-button--bottom-center:hover {
-  transform: translateX(-50%) scale(1.1);
-}
 
 .floating-button--bottom-center:active {
   transform: translateX(-50%) scale(0.95);

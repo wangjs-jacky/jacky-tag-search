@@ -41,10 +41,6 @@
   transition: all 0.2s ease-in-out;
 }
 
-.empty-state__action:hover {
-  background: #40a9ff;
-  transform: translateY(-1px);
-}
 
 .empty-state__action:active {
   transform: translateY(0);

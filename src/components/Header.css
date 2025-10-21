@@ -33,12 +33,6 @@
   justify-content: center;
 }
 
-.header__menu-button:hover,
-.header__search-button:hover,
-.header__back-button:hover,
-.header__clear-button:hover {
-  background-color: #f5f5f5;
-}
 
 .header__title {
   display: flex;

@@ -29,7 +29,9 @@ export function TextCard({
 }: TextCardProps) {
   const longPressHandlers = useLongPress({
     onLongPress,
-    onClick: showCheckbox ? () => onSelectionChange?.(!isSelected) : onClick
+    onClick: showCheckbox ? () => onSelectionChange?.(!isSelected) : onClick,
+    dragThreshold: 15, // 设置15像素的拖动阈值
+    longPressThreshold: 8 // 设置8像素的长按阈值，更严格
   });
 
   const preview = getHighlightedPreview(item.text, searchText, 100);

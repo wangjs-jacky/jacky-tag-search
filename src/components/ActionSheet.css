@@ -51,9 +51,6 @@
   transition: background-color 0.2s ease-in-out;
 }
 
-.action-sheet__close:hover {
-  background-color: rgba(0, 0, 0, 0.1);
-}
 
 .action-sheet__content {
   padding: 8px 0;
@@ -71,17 +68,11 @@
   text-align: left;
 }
 
-.action-sheet__item:hover {
-  background-color: #f5f5f5;
-}
 
 .action-sheet__item--danger {
   color: #ff4d4f;
 }
 
-.action-sheet__item--danger:hover {
-  background-color: #fff2f0;
-}
 
 .action-sheet__item-icon {
   font-size: 20px;
@@ -113,6 +104,3 @@
   transition: background-color 0.2s ease-in-out;
 }
 
-.action-sheet__cancel:hover {
-  background-color: #e6e6e6;
-}

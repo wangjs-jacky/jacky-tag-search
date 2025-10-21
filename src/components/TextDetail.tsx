@@ -28,9 +28,34 @@ export function TextDetail({
   onAction
 }: TextDetailProps) {
   const [showActionSheet, setShowActionSheet] = React.useState(false);
+  const [shouldRender, setShouldRender] = React.useState(false);
+  const [isAnimating, setIsAnimating] = React.useState(false);
+
+  const handleClose = () => {
+    // 先触发退出动画
+    setIsAnimating(false);
+    // 等待动画完成后调用 onClose
+    setTimeout(() => {
+      onClose();
+      setShouldRender(false);
+    }, 300); // 与 CSS 动画时间一致
+  };
+
+  // 处理显示和隐藏
+  React.useEffect(() => {
+    if (isVisible) {
+      setShouldRender(true);
+      // 延迟添加动画类，确保 DOM 渲染完成
+      setTimeout(() => {
+        setIsAnimating(true);
+      }, 10);
+    } else {
+      setIsAnimating(false);
+    }
+  }, [isVisible]);
 
   const swipeHandlers = useSwipe({
-    onSwipeDown: onClose,
+    onSwipeLeft: handleClose,
     preventDefault: false
   });
 
@@ -43,20 +68,21 @@ export function TextDetail({
     setShowActionSheet(true);
   };
 
-  if (!isVisible || !item || !item.text) return null;
+  // 只有在应该渲染时才渲染
+  if (!shouldRender || !item || !item.text) return null;
 
   const highlightedText = highlightText(item.text, searchText);
 
   return (
     <>
       <div 
-        className={`text-detail ${isVisible ? 'text-detail--visible' : ''}`}
+        className={`text-detail ${isAnimating ? 'text-detail--visible' : ''}`}
         {...swipeHandlers}
       >
         <div className="text-detail__header">
           <button 
             className="text-detail__back"
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="返回"
           >
             ←
