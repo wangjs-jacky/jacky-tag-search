@@ -3,8 +3,9 @@ import { KeywordTag } from './KeywordTag.js';
 import { useLongPress } from '../hooks/useLongPress.js';
 import { getFriendlyDate } from '../utils/date.js';
 import { getHighlightedPreview } from '../utils/highlight.js';
+import { copyToClipboard, showCopySuccess, showCopyError } from '../utils/copy.js';
 import { HiBookmark } from 'react-icons/hi';
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import './TextCard.css';
 
 interface TextCardProps {
@@ -12,6 +13,7 @@ interface TextCardProps {
   searchText?: string;
   onClick: () => void;
   onLongPress: () => void;
+  onCopy?: (item: TextItem) => void;
   isSelected?: boolean;
   onSelectionChange?: (selected: boolean) => void;
   showCheckbox?: boolean;
@@ -25,6 +27,7 @@ export function TextCard({
   searchText = '',
   onClick,
   onLongPress,
+  onCopy,
   isSelected = false,
   onSelectionChange,
   showCheckbox = false
@@ -32,6 +35,8 @@ export function TextCard({
   const [spotlightPosition, setSpotlightPosition] = useState<{ x: number; y: number } | null>(null);
   const [isSpotlightActive, setIsSpotlightActive] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const lastClickTimeRef = useRef<number>(0);
+  const clickCountRef = useRef<number>(0);
 
   const handleLongPressStart = (event: React.MouseEvent | React.TouchEvent) => {
     if (!cardRef.current) return;
@@ -60,12 +65,57 @@ export function TextCard({
     }, 300); // 等待动画完成
   };
 
+  // 双击快速复制功能
+  const handleDoubleClick = useCallback(async () => {
+    try {
+      await copyToClipboard(item.text);
+      showCopySuccess();
+      // 通知父组件更新复制次数
+      onCopy?.(item);
+    } catch (error) {
+      console.error('复制失败:', error);
+      showCopyError();
+    }
+  }, [item, onCopy]);
+
+  // 点击处理函数 - 更简单的版本
+  const handleClick = useCallback(() => {
+    const now = Date.now();
+    const timeDiff = now - lastClickTimeRef.current;
+    
+    // 如果两次点击间隔小于 300ms，认为是双击
+    if (timeDiff < 300 && clickCountRef.current === 1) {
+      // 双击：快速复制
+      handleDoubleClick();
+      clickCountRef.current = 0;
+      lastClickTimeRef.current = 0;
+      return;
+    }
+    
+    // 更新点击计数和时间
+    clickCountRef.current = 1;
+    lastClickTimeRef.current = now;
+    
+    // 延迟执行单击逻辑
+    setTimeout(() => {
+      if (clickCountRef.current === 1) {
+        // 单击：正常点击
+        if (showCheckbox) {
+          onSelectionChange?.(!isSelected);
+        } else {
+          onClick();
+        }
+      }
+      clickCountRef.current = 0;
+    }, 150); // 进一步减少延迟时间
+  }, [handleDoubleClick, onClick, onSelectionChange, showCheckbox, isSelected]);
+
   const longPressHandlers = useLongPress({
     onLongPress: () => {
       handleLongPressEnd();
       onLongPress();
     },
-    onClick: showCheckbox ? () => onSelectionChange?.(!isSelected) : onClick,
+    onClick: undefined, // 不使用 useLongPress 的 onClick
     dragThreshold: 15,
     longPressThreshold: 8
   });
@@ -81,12 +131,20 @@ export function TextCard({
     longPressHandlers.onTouchStart(e);
   };
 
+  // 添加原生点击事件处理
+  const handleNativeClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleClick();
+  };
+
   const preview = getHighlightedPreview(item.text, searchText, 100);
 
   return (
     <div 
       ref={cardRef}
       className={`text-card ${item.isPinned ? 'text-card--pinned' : ''} ${isSelected ? 'text-card--selected' : ''} ${showCheckbox ? 'text-card--with-checkbox' : ''} ${isSpotlightActive ? 'text-card--spotlight' : ''}`}
+      onClick={handleNativeClick}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
       onMouseMove={longPressHandlers.onMouseMove}

@@ -179,9 +179,16 @@ export default function App() {
     }
   }, [selectedItem, actionSheetItem, actionSheetVisible, updateItem, deleteItem]);
 
+  // 处理卡片双击复制
+  const handleCardCopy = useCallback((item: TextItem) => {
+    updateItem(item.id, { 
+      copyCount: item.copyCount + 1 
+    });
+  }, [updateItem]);
+
   // 处理文本保存
   const handleSaveItem = useCallback((item: TextItem) => {
-    if (editingItem) {
+    if (editingItem && editingItem.id) {
       updateItem(item.id, item);
       // 如果是编辑现有项目，更新详情浮层的内容
       if (selectedItem && selectedItem.id === item.id) {
@@ -308,6 +315,7 @@ export default function App() {
                 searchText={searchText}
                 onClick={() => setSelectedItem(item)}
                 onLongPress={() => handleLongPress(item)}
+                onCopy={handleCardCopy}
                 isSelected={selectedIds.includes(item.id)}
                 onSelectionChange={(selected) => handleMultiSelect(item.id, selected)}
                 showCheckbox={isMultiSelecting}
