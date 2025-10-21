@@ -3,6 +3,8 @@ import { KeywordTag } from './KeywordTag.js';
 import { useLongPress } from '../hooks/useLongPress.js';
 import { getFriendlyDate } from '../utils/date.js';
 import { getHighlightedPreview } from '../utils/highlight.js';
+import { HiBookmark } from 'react-icons/hi';
+import { useState, useRef } from 'react';
 import './TextCard.css';
 
 interface TextCardProps {
@@ -27,20 +29,85 @@ export function TextCard({
   onSelectionChange,
   showCheckbox = false
 }: TextCardProps) {
+  const [spotlightPosition, setSpotlightPosition] = useState<{ x: number; y: number } | null>(null);
+  const [isSpotlightActive, setIsSpotlightActive] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleLongPressStart = (event: React.MouseEvent | React.TouchEvent) => {
+    if (!cardRef.current) return;
+    
+    const rect = cardRef.current.getBoundingClientRect();
+    let x: number, y: number;
+    
+    if ('touches' in event && event.touches.length > 0) {
+      x = event.touches[0].clientX - rect.left;
+      y = event.touches[0].clientY - rect.top;
+    } else if ('clientX' in event) {
+      x = event.clientX - rect.left;
+      y = event.clientY - rect.top;
+    } else {
+      return;
+    }
+    
+    setSpotlightPosition({ x, y });
+    setIsSpotlightActive(true);
+  };
+
+  const handleLongPressEnd = () => {
+    setIsSpotlightActive(false);
+    setTimeout(() => {
+      setSpotlightPosition(null);
+    }, 300); // 等待动画完成
+  };
+
   const longPressHandlers = useLongPress({
-    onLongPress,
+    onLongPress: () => {
+      handleLongPressEnd();
+      onLongPress();
+    },
     onClick: showCheckbox ? () => onSelectionChange?.(!isSelected) : onClick,
-    dragThreshold: 15, // 设置15像素的拖动阈值
-    longPressThreshold: 8 // 设置8像素的长按阈值，更严格
+    dragThreshold: 15,
+    longPressThreshold: 8
   });
+
+  // 添加鼠标和触摸事件处理
+  const handleMouseDown = (e: React.MouseEvent) => {
+    handleLongPressStart(e);
+    longPressHandlers.onMouseDown(e);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    handleLongPressStart(e);
+    longPressHandlers.onTouchStart(e);
+  };
 
   const preview = getHighlightedPreview(item.text, searchText, 100);
 
   return (
     <div 
-      className={`text-card ${item.isPinned ? 'text-card--pinned' : ''} ${isSelected ? 'text-card--selected' : ''} ${showCheckbox ? 'text-card--with-checkbox' : ''}`}
-      {...longPressHandlers}
+      ref={cardRef}
+      className={`text-card ${item.isPinned ? 'text-card--pinned' : ''} ${isSelected ? 'text-card--selected' : ''} ${showCheckbox ? 'text-card--with-checkbox' : ''} ${isSpotlightActive ? 'text-card--spotlight' : ''}`}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
+      onMouseMove={longPressHandlers.onMouseMove}
+      onTouchMove={longPressHandlers.onTouchMove}
+      onMouseUp={longPressHandlers.onMouseUp}
+      onMouseLeave={longPressHandlers.onMouseLeave}
+      onTouchEnd={longPressHandlers.onTouchEnd}
+      onTouchCancel={longPressHandlers.onTouchCancel}
     >
+      {/* 聚光灯效果 */}
+      {spotlightPosition && (
+        <div 
+          className="text-card__spotlight"
+          style={{
+            left: spotlightPosition.x,
+            top: spotlightPosition.y,
+            transform: `translate(-50%, -50%)`
+          }}
+        />
+      )}
+      
       {showCheckbox && (
         <div className="text-card__checkbox">
           <input
@@ -60,7 +127,7 @@ export function TextCard({
           />
           {item.isPinned && (
             <div className="text-card__pinned-icon" title="已置顶">
-              📌
+              <HiBookmark />
             </div>
           )}
         </div>

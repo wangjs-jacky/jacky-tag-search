@@ -112,6 +112,7 @@ export default function App() {
     }
   }, [items, replaceAll]);
 
+
   // 处理长按显示操作菜单
   const handleLongPress = useCallback((item: TextItem) => {
     if (!isMultiSelecting) {
@@ -182,11 +183,15 @@ export default function App() {
   const handleSaveItem = useCallback((item: TextItem) => {
     if (editingItem) {
       updateItem(item.id, item);
+      // 如果是编辑现有项目，更新详情浮层的内容
+      if (selectedItem && selectedItem.id === item.id) {
+        setSelectedItem(item);
+      }
     } else {
       addItem(item);
     }
     setEditingItem(undefined);
-  }, [editingItem, updateItem, addItem]);
+  }, [editingItem, selectedItem, updateItem, addItem]);
 
   // 处理多选
   const handleMultiSelect = useCallback((itemId: string, selected: boolean) => {
@@ -326,7 +331,7 @@ export default function App() {
           onClose={() => setSelectedItem(null)}
           onEdit={() => {
             setEditingItem(selectedItem);
-            setSelectedItem(null);
+            // 不关闭详情浮层，让两个浮层同时存在
           }}
           onAction={(action) => handleAction(action)}
         />

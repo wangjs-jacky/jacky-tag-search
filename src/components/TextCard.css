@@ -8,17 +8,47 @@
   transition: all 0.2s ease-in-out;
   position: relative;
   border: 2px solid transparent;
+  overflow: hidden;
 }
 
-
 .text-card--pinned {
-  border-color: #1890ff;
-  background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%);
+  box-shadow: 0 4px 16px rgba(96, 96, 96, 0.12);
+  background: white;
 }
 
 .text-card--selected {
-  border-color: #52c41a;
+  box-shadow: 0 4px 16px rgba(82, 196, 26, 0.15);
   background: #f6ffed;
+}
+
+.text-card--spotlight {
+  position: relative;
+}
+
+.text-card__spotlight {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(96, 96, 96, 0.15) 0%, rgba(96, 96, 96, 0.08) 30%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+  transform: translate(-50%, -50%);
+  animation: spotlightExpand 0.4s ease-out forwards;
+}
+
+@keyframes spotlightExpand {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    width: 300px;
+    height: 300px;
+    opacity: 0;
+  }
 }
 
 .text-card__checkbox {
@@ -36,6 +66,8 @@
 
 .text-card__content {
   margin-left: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .text-card--with-checkbox .text-card__content {

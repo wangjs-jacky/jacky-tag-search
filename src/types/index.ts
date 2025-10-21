@@ -1,3 +1,5 @@
+import React from 'react';
+
 // 文本项接口
 export interface TextItem {
   id: string;                    // 唯一标识
@@ -19,7 +21,7 @@ export type ViewType = 'all' | 'pinned' | 'trash';
 export interface ViewConfig {
   type: ViewType;
   title: string;
-  icon: string;
+  icon: React.ReactNode;
   description: string;
 }
 

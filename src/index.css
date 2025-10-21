@@ -61,14 +61,14 @@ input, textarea {
 
 /* 链接样式 */
 a {
-  color: #1890ff;
+  color: #606060;
   text-decoration: none;
 }
 
 
 /* 选择文本样式 */
 ::selection {
-  background-color: #1890ff;
+  background-color: #606060;
   color: white;
 }
 

@@ -18,19 +18,16 @@ export function ActionSheet({ isVisible, item, onClose, onAction }: ActionSheetP
     {
       type: 'copy' as ActionType,
       label: '复制内容',
-      icon: '📋',
       danger: false
     },
     {
       type: item.isPinned ? 'unpin' as ActionType : 'pin' as ActionType,
       label: item.isPinned ? '取消置顶' : '置顶',
-      icon: '📌',
       danger: false
     },
     {
       type: 'delete' as ActionType,
-      label: '移动到回收站',
-      icon: '🗑️',
+      label: '移入回收站',
       danger: true
     }
   ];
@@ -50,17 +47,6 @@ export function ActionSheet({ isVisible, item, onClose, onAction }: ActionSheetP
       
       {/* 操作菜单 */}
       <div className="action-sheet">
-        <div className="action-sheet__header">
-          <h3 className="action-sheet__title">选择操作</h3>
-          <button 
-            className="action-sheet__close"
-            onClick={onClose}
-            aria-label="关闭"
-          >
-            ✕
-          </button>
-        </div>
-        
         <div className="action-sheet__content">
           {actions.map((action) => (
             <button
@@ -68,19 +54,9 @@ export function ActionSheet({ isVisible, item, onClose, onAction }: ActionSheetP
               className={`action-sheet__item ${action.danger ? 'action-sheet__item--danger' : ''}`}
               onClick={() => handleActionClick(action.type)}
             >
-              <span className="action-sheet__item-icon">{action.icon}</span>
-              <span className="action-sheet__item-label">{action.label}</span>
+              {action.label}
             </button>
           ))}
-        </div>
-        
-        <div className="action-sheet__footer">
-          <button 
-            className="action-sheet__cancel"
-            onClick={onClose}
-          >
-            取消
-          </button>
         </div>
       </div>
     </>

@@ -71,9 +71,9 @@
 }
 
 .header__search-input:focus {
-  border-color: #1890ff;
+  border-color: #606060;
   background: white;
-  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  box-shadow: 0 0 0 2px rgba(96, 96, 96, 0.2);
 }
 
 .header__search-input::placeholder {

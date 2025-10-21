@@ -1,4 +1,5 @@
 import { ViewType, ViewConfig } from '../types/index.js';
+import { HiDocumentText, HiBookmark, HiTrash } from 'react-icons/hi';
 
 // 存储键名
 export const STORAGE_KEYS = {
@@ -11,19 +12,19 @@ export const VIEW_CONFIGS: Record<ViewType, ViewConfig> = {
   all: {
     type: 'all',
     title: '全部笔记',
-    icon: '📝',
+    icon: <HiDocumentText />,
     description: '显示所有未删除的笔记'
   },
   pinned: {
     type: 'pinned',
     title: '已置顶',
-    icon: '📌',
+    icon: <HiBookmark />,
     description: '显示已置顶的笔记'
   },
   trash: {
     type: 'trash',
     title: '回收站',
-    icon: '🗑️',
+    icon: <HiTrash />,
     description: '显示已删除的笔记，30天后自动清空'
   }
 };

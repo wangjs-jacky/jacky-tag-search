@@ -45,14 +45,82 @@ function fallbackCopy(text: string): boolean {
  * 显示复制成功提示
  */
 export function showCopySuccess(): void {
-  // 这里可以集成 Toast 组件
-  console.log('复制成功');
+  // 创建 Toast 元素
+  const toast = document.createElement('div');
+  toast.textContent = '文案已复制';
+  toast.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  `;
+  
+  document.body.appendChild(toast);
+  
+  // 显示动画
+  setTimeout(() => {
+    toast.style.opacity = '1';
+  }, 10);
+  
+  // 自动移除
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => {
+      if (document.body.contains(toast)) {
+        document.body.removeChild(toast);
+      }
+    }, 300);
+  }, 2000);
 }
 
 /**
  * 显示复制失败提示
  */
 export function showCopyError(): void {
-  // 这里可以集成 Toast 组件
-  console.error('复制失败');
+  // 创建 Toast 元素
+  const toast = document.createElement('div');
+  toast.textContent = '复制失败';
+  toast.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 77, 79, 0.9);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  `;
+  
+  document.body.appendChild(toast);
+  
+  // 显示动画
+  setTimeout(() => {
+    toast.style.opacity = '1';
+  }, 10);
+  
+  // 自动移除
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => {
+      if (document.body.contains(toast)) {
+        document.body.removeChild(toast);
+      }
+    }, 300);
+  }, 2000);
 }

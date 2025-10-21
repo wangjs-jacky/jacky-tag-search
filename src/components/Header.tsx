@@ -1,4 +1,5 @@
 import { ViewType } from '../types/index.js';
+import { HiMenu, HiSearch, HiArrowLeft, HiX } from 'react-icons/hi';
 import './Header.css';
 
 interface HeaderProps {
@@ -33,7 +34,7 @@ export function Header({
           onClick={onBackClick}
           aria-label="返回"
         >
-          ←
+          <HiArrowLeft />
         </button>
         <div className="header__search-container">
           <input
@@ -51,7 +52,7 @@ export function Header({
             onClick={onSearchClear}
             aria-label="清除搜索"
           >
-            ✕
+            <HiX />
           </button>
         )}
       </header>
@@ -65,7 +66,7 @@ export function Header({
         onClick={onMenuClick}
         aria-label="打开菜单"
       >
-        ☰
+        <HiMenu />
       </button>
       <div className="header__title">
       </div>
@@ -74,7 +75,7 @@ export function Header({
         onClick={onSearchClick}
         aria-label="搜索"
       >
-        🔍
+        <HiSearch />
       </button>
     </header>
   );

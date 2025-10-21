@@ -30,14 +30,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid #d9d9d9;
-  background: #f5f5f5;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f0f0f0;
+  background: white;
 }
 
 .sidebar__title {
-  font-size: 18px;
-  font-weight: 500;
+  font-size: 20px;
+  font-weight: 600;
   color: #262626;
   margin: 0;
 }
@@ -47,68 +47,85 @@
   border: none;
   font-size: 20px;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
+  padding: 8px;
+  border-radius: 6px;
   transition: background-color 0.2s ease-in-out;
+  color: #8c8c8c;
 }
 
+.sidebar__close:active {
+  background-color: #f5f5f5;
+}
 
 .sidebar__nav {
-  padding: 16px 0;
+  padding: 8px 0;
 }
 
 .sidebar__section {
-  margin-bottom: 24px;
+  margin-bottom: 8px;
 }
 
 .sidebar__section-title {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   color: #8c8c8c;
-  margin: 0 0 8px 0;
-  padding: 0 20px;
+  margin: 0 0 4px 0;
+  padding: 8px 24px 4px 24px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
+}
+
+.sidebar__section-divider {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 16px 24px;
 }
 
 .sidebar__item {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   width: 100%;
-  padding: 12px 20px;
+  padding: 12px 24px;
   background: none;
   border: none;
   cursor: pointer;
   transition: background-color 0.2s ease-in-out;
   text-align: left;
+  gap: 12px;
 }
 
+.sidebar__item:active {
+  background-color: #f5f5f5;
+}
 
 .sidebar__item--active {
-  background-color: #e6f7ff;
-  border-right: 3px solid #1890ff;
+  background-color: #e6e6e6;
+  border-right: 3px solid #606060;
 }
 
 .sidebar__item--active .sidebar__item-text {
-  color: #1890ff;
+  color: #606060;
   font-weight: 500;
 }
 
 .sidebar__item-icon {
   font-size: 20px;
-  margin-bottom: 4px;
+  color: #8c8c8c;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar__item--active .sidebar__item-icon {
+  color: #606060;
 }
 
 .sidebar__item-text {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 400;
   color: #262626;
-  margin-bottom: 2px;
-}
-
-.sidebar__item-description {
-  font-size: 12px;
-  color: #8c8c8c;
-  line-height: 1.4;
+  flex: 1;
 }

@@ -1,10 +1,12 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { TextItem, ActionType } from '../types/index.js';
 import { KeywordTag } from './KeywordTag.js';
 import { ActionSheet } from './ActionSheet.js';
 import { useSwipe } from '../hooks/useSwipe.js';
-import { formatDate } from '../utils/date.js';
 import { highlightText } from '../utils/highlight.js';
+import { copyToClipboard, showCopySuccess, showCopyError } from '../utils/copy.js';
+import { HiArrowLeft, HiPencil, HiDotsVertical, HiClipboard } from 'react-icons/hi';
 import './TextDetail.css';
 
 interface TextDetailProps {
@@ -68,12 +70,23 @@ export function TextDetail({
     setShowActionSheet(true);
   };
 
+  const handleQuickCopy = async () => {
+    if (!item) return;
+    
+    const success = await copyToClipboard(item.text);
+    if (success) {
+      showCopySuccess();
+    } else {
+      showCopyError();
+    }
+  };
+
   // 只有在应该渲染时才渲染
   if (!shouldRender || !item || !item.text) return null;
 
   const highlightedText = highlightText(item.text, searchText);
 
-  return (
+  return createPortal(
     <>
       <div 
         className={`text-detail ${isAnimating ? 'text-detail--visible' : ''}`}
@@ -85,23 +98,29 @@ export function TextDetail({
             onClick={handleClose}
             aria-label="返回"
           >
-            ←
+            <HiArrowLeft />
           </button>
-          <h2 className="text-detail__title">文本详情</h2>
           <div className="text-detail__actions">
             <button 
               className="text-detail__edit"
               onClick={onEdit}
               aria-label="编辑"
             >
-              ✏️
+              <HiPencil />
+            </button>
+            <button 
+              className="text-detail__copy"
+              onClick={handleQuickCopy}
+              aria-label="快速复制"
+            >
+              <HiClipboard />
             </button>
             <button 
               className="text-detail__more"
               onClick={handleMoreClick}
               aria-label="更多操作"
             >
-              ⋯
+              <HiDotsVertical />
             </button>
           </div>
         </div>
@@ -127,29 +146,6 @@ export function TextDetail({
             </div>
           )}
         </div>
-
-        <div className="text-detail__footer">
-          <div className="text-detail__meta">
-            <div className="text-detail__meta-item">
-              <span className="text-detail__meta-label">创建时间</span>
-              <span className="text-detail__meta-value">
-                {formatDate(item.createTime, 'YYYY-MM-DD HH:mm')}
-              </span>
-            </div>
-            <div className="text-detail__meta-item">
-              <span className="text-detail__meta-label">修改时间</span>
-              <span className="text-detail__meta-value">
-                {formatDate(item.updateTime, 'YYYY-MM-DD HH:mm')}
-              </span>
-            </div>
-            <div className="text-detail__meta-item">
-              <span className="text-detail__meta-label">复制次数</span>
-              <span className="text-detail__meta-value">
-                {item.copyCount} 次
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
 
       <ActionSheet
@@ -158,6 +154,7 @@ export function TextDetail({
         onClose={() => setShowActionSheet(false)}
         onAction={handleAction}
       />
-    </>
+    </>,
+    document.body
   );
 }

@@ -1,5 +1,6 @@
 import { ViewType } from '../types/index.js';
 import { VIEW_CONFIGS } from '../constants/index.js';
+import { HiX, HiDownload, HiUpload } from 'react-icons/hi';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -46,7 +47,7 @@ export function Sidebar({
             onClick={onClose}
             aria-label="关闭侧边栏"
           >
-            ✕
+            <HiX />
           </button>
         </div>
         
@@ -61,10 +62,11 @@ export function Sidebar({
               >
                 <span className="sidebar__item-icon">{config.icon}</span>
                 <span className="sidebar__item-text">{config.title}</span>
-                <span className="sidebar__item-description">{config.description}</span>
               </button>
             ))}
           </div>
+          
+          <div className="sidebar__section-divider"></div>
           
           <div className="sidebar__section">
             <h3 className="sidebar__section-title">数据管理</h3>
@@ -75,9 +77,8 @@ export function Sidebar({
                 onClose();
               }}
             >
-              <span className="sidebar__item-icon">📤</span>
+              <span className="sidebar__item-icon"><HiDownload /></span>
               <span className="sidebar__item-text">导出数据</span>
-              <span className="sidebar__item-description">导出为 JSON 文件</span>
             </button>
             
             <button
@@ -87,9 +88,8 @@ export function Sidebar({
                 onClose();
               }}
             >
-              <span className="sidebar__item-icon">📥</span>
+              <span className="sidebar__item-icon"><HiUpload /></span>
               <span className="sidebar__item-text">导入数据</span>
-              <span className="sidebar__item-description">从 JSON 文件导入</span>
             </button>
           </div>
         </nav>

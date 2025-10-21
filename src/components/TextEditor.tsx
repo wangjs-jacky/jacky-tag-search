@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { TextItem } from '../types/index.js';
 import { KeywordTag } from './KeywordTag.js';
 import { useSwipe } from '../hooks/useSwipe.js';
@@ -20,15 +21,40 @@ export function TextEditor({ isVisible, item, onClose, onSave }: TextEditorProps
   const [keywords, setKeywords] = useState<string[]>(item?.keywords || []);
   const [keywordInput, setKeywordInput] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const handleClose = () => {
+    // 先触发退出动画
+    setIsAnimating(false);
+    // 等待动画完成后调用 onClose
+    setTimeout(() => {
+      onClose();
+      setShouldRender(false);
+    }, 300); // 与 CSS 动画时间一致
+  };
+
+  // 处理显示和隐藏
+  React.useEffect(() => {
+    if (isVisible) {
+      setShouldRender(true);
+      // 延迟添加动画类，确保 DOM 渲染完成
+      setTimeout(() => {
+        setIsAnimating(true);
+      }, 10);
+    } else {
+      setIsAnimating(false);
+    }
+  }, [isVisible]);
 
   const swipeHandlers = useSwipe({
     onSwipeDown: () => {
       if (hasChanges) {
         if (confirm('确定要放弃更改吗？')) {
-          onClose();
+          handleClose();
         }
       } else {
-        onClose();
+        handleClose();
       }
     },
     preventDefault: false
@@ -93,18 +119,19 @@ export function TextEditor({ isVisible, item, onClose, onSave }: TextEditorProps
   const handleCancel = () => {
     if (hasChanges) {
       if (confirm('确定要放弃更改吗？')) {
-        onClose();
+        handleClose();
       }
     } else {
-      onClose();
+      handleClose();
     }
   };
 
-  if (!isVisible) return null;
+  // 只有在应该渲染时才渲染
+  if (!shouldRender) return null;
 
-  return (
+  return createPortal(
     <div 
-      className="text-editor"
+      className={`text-editor ${isAnimating ? 'text-editor--visible' : ''}`}
       {...swipeHandlers}
     >
       <div className="text-editor__header">
@@ -172,6 +199,7 @@ export function TextEditor({ isVisible, item, onClose, onSave }: TextEditorProps
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

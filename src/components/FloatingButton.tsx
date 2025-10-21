@@ -1,3 +1,4 @@
+import { HiPlus } from 'react-icons/hi';
 import './FloatingButton.css';
 
 interface FloatingButtonProps {
@@ -13,7 +14,7 @@ interface FloatingButtonProps {
  */
 export function FloatingButton({ 
   onClick, 
-  icon = '+', 
+  icon, 
   label,
   position = 'bottom-right',
   size = 'large'
@@ -24,7 +25,9 @@ export function FloatingButton({
       onClick={onClick}
       aria-label={label || '添加新项目'}
     >
-      <span className="floating-button__icon">{icon}</span>
+      <span className="floating-button__icon">
+        {icon ? icon : <HiPlus />}
+      </span>
       {label && (
         <span className="floating-button__label">{label}</span>
       )}
