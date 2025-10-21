@@ -1,0 +1,118 @@
+.action-sheet__overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 500;
+}
+
+.action-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 16px 16px 0 0;
+  z-index: 501;
+  transform: translateY(100%);
+  animation: slideUp 0.3s ease-in-out forwards;
+}
+
+@keyframes slideUp {
+  to {
+    transform: translateY(0);
+  }
+}
+
+.action-sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #d9d9d9;
+}
+
+.action-sheet__title {
+  font-size: 18px;
+  font-weight: 500;
+  color: #262626;
+  margin: 0;
+}
+
+.action-sheet__close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.action-sheet__close:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.action-sheet__content {
+  padding: 8px 0;
+}
+
+.action-sheet__item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+  text-align: left;
+}
+
+.action-sheet__item:hover {
+  background-color: #f5f5f5;
+}
+
+.action-sheet__item--danger {
+  color: #ff4d4f;
+}
+
+.action-sheet__item--danger:hover {
+  background-color: #fff2f0;
+}
+
+.action-sheet__item-icon {
+  font-size: 20px;
+  margin-right: 12px;
+  width: 24px;
+  text-align: center;
+}
+
+.action-sheet__item-label {
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.action-sheet__footer {
+  padding: 16px 20px;
+  border-top: 1px solid #d9d9d9;
+}
+
+.action-sheet__cancel {
+  width: 100%;
+  background: #f5f5f5;
+  color: #262626;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.action-sheet__cancel:hover {
+  background-color: #e6e6e6;
+}

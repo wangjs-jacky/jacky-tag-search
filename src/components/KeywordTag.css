@@ -1,0 +1,54 @@
+.keyword-tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 12px;
+  color: white;
+  font-weight: 500;
+  margin: 2px 4px 2px 0;
+  transition: all 0.2s ease-in-out;
+}
+
+.keyword-tag--small {
+  font-size: 10px;
+  padding: 2px 8px;
+}
+
+.keyword-tag--medium {
+  font-size: 12px;
+  padding: 4px 12px;
+}
+
+.keyword-tag--large {
+  font-size: 14px;
+  padding: 6px 16px;
+}
+
+.keyword-tag--clickable {
+  cursor: pointer;
+}
+
+.keyword-tag--clickable:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.keyword-tag__text {
+  flex: 1;
+}
+
+.keyword-tag__remove {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  margin-left: 4px;
+  padding: 0;
+  opacity: 0.8;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.keyword-tag__remove:hover {
+  opacity: 1;
+}

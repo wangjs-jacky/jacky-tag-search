@@ -1,0 +1,80 @@
+.floating-button {
+  position: fixed;
+  background: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+.floating-button:hover {
+  background: #40a9ff;
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(24, 144, 255, 0.5);
+}
+
+.floating-button:active {
+  transform: scale(0.95);
+}
+
+/* 位置 */
+.floating-button--bottom-right {
+  bottom: 20px;
+  right: 20px;
+}
+
+.floating-button--bottom-left {
+  bottom: 20px;
+  left: 20px;
+}
+
+.floating-button--bottom-center {
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.floating-button--bottom-center:hover {
+  transform: translateX(-50%) scale(1.1);
+}
+
+.floating-button--bottom-center:active {
+  transform: translateX(-50%) scale(0.95);
+}
+
+/* 尺寸 */
+.floating-button--small {
+  width: 44px;
+  height: 44px;
+  font-size: 18px;
+}
+
+.floating-button--medium {
+  width: 56px;
+  height: 56px;
+  font-size: 24px;
+}
+
+.floating-button--large {
+  width: 64px;
+  height: 64px;
+  font-size: 28px;
+}
+
+.floating-button__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.floating-button__label {
+  margin-left: 8px;
+  font-size: 14px;
+}

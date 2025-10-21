@@ -1,0 +1,875 @@
+---
+alwaysApply: true
+description: 项目整体架构和技术栈要求
+---
+
+# 移动端文本管理系统 - 项目 Prompt
+
+## 项目概述
+
+请帮我创建一个移动端关键字文本管理和查询系统的完整项目。
+
+## 技术栈要求
+
+### 核心技术
+- **前端框架**：React 18+
+- **开发语言**：TypeScript（配置支持隐式 any）
+- **模块系统**：ESModule（package.json 中 `type: "module"`）
+- **编译工具**：tsc
+- **UI 框架**：使用移动端优化的组件库（如 Ant Design Mobile 或 Vant React）
+- **构建工具**：Vite（支持 ESM）
+
+## 项目结构
+
+```
+jacky-pwa/
+├── src/
+│   ├── components/          # 组件目录
+│   │   ├── Header.tsx       # 顶部导航栏（菜单图标、标题、搜索图标）
+│   │   ├── SearchBar.tsx    # 搜索栏（展开状态）
+│   │   ├── Sidebar.tsx      # 侧边栏（菜单）
+│   │   ├── TextCard.tsx     # 文本卡片
+│   │   ├── TextDetail.tsx   # 详情浮层页面
+│   │   ├── TextEditor.tsx   # 编辑器对话框
+│   │   ├── ActionSheet.tsx  # 操作菜单（长按弹出）
+│   │   ├── KeywordTag.tsx   # 关键字标签
+│   │   ├── EmptyState.tsx   # 空状态组件
+│   │   └── FloatingButton.tsx # 底部浮动按钮
+│   ├── hooks/              # 自定义 Hooks
+│   │   ├── useLocalStorage.ts  # localStorage 管理
+│   │   ├── useSearch.ts        # 搜索功能
+│   │   ├── useLongPress.ts     # 长按手势
+│   │   └── useSwipe.ts         # 滑动手势
+│   ├── types/              # 类型定义
+│   │   └── index.ts        # TextItem, ViewType 等类型
+│   ├── utils/              # 工具函数
+│   │   ├── storage.ts      # localStorage 操作
+│   │   ├── copy.ts         # 复制功能
+│   │   ├── highlight.ts    # 高亮显示
+│   │   ├── date.ts         # 日期格式化
+│   │   └── trash.ts        # 回收站清理逻辑
+│   ├── constants/          # 常量定义
+│   │   └── index.ts        # 存储键名、颜色配置等
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── index.css
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+└── index.html
+```
+
+## 核心功能实现
+
+### 2. 文本管理功能
+
+#### 功能列表
+- **添加文本**：底部浮动按钮 "+" 打开编辑器对话框
+- **编辑文本**：点击文本卡片进入编辑模式
+- **删除文本**：卡片滑动操作或长按显示删除按钮，需二次确认
+- **关键字管理**：
+  - 标签输入支持逗号分隔
+  - 动态添加/删除标签
+  - 标签以彩色胶囊形式显示
+
+#### 数据类型定义
+```typescript
+// 文本项接口
+interface TextItem {
+  id: string;                    // 唯一标识
+  text: string;                   // 文本内容
+  keywords: string[];             // 关键字数组
+  createTime: string;             // 创建时间 (ISO 8601 格式)
+  updateTime: string;             // 修改时间 (ISO 8601 格式)
+  copyCount: number;              // 复制次数（保留用于统计）
+  isPinned: boolean;              // 是否置顶
+  isDeleted: boolean;             // 是否在回收站
+  deletedTime?: string;           // 删除时间（移到回收站的时间）
+  pinnedTime?: string;            // 置顶时间（用于置顶排序）
+}
+
+// 视图类型
+type ViewType = 'all' | 'pinned' | 'trash';
+
+// 视图配置
+interface ViewConfig {
+  type: ViewType;
+  title: string;
+  icon: string;
+  description: string;
+}
+
+// 视图配置映射
+const VIEW_CONFIGS: Record<ViewType, ViewConfig> = {
+  all: {
+    type: 'all',
+    title: '全部笔记',
+    icon: '📝',
+    description: '显示所有未删除的笔记'
+  },
+  pinned: {
+    type: 'pinned',
+    title: '已置顶',
+    icon: '📌',
+    description: '显示已置顶的笔记'
+  },
+  trash: {
+    type: 'trash',
+    title: '回收站',
+    icon: '🗑️',
+    description: '显示已删除的笔记，30天后自动清空'
+  }
+};
+```
+
+```json
+{
+  "id": "1",
+  "text": "预计将来会有防雷击电磁脉冲的电气和电子系统，应在设计时将建筑物的金属支撑物、金属框架或钢筋混泥土的钢筋自然构件、金属管道、配电的保护接地系统与防雷装置组成一个接地系统，并应在需要处预埋电位连接板。—公配房、环网室的接地系统建议与建筑主体的接地系统连在一起。（《建筑防雷设计规范》(GB50057-2010)、《电气装置安装工程 接地装置施工及验收规范》(GB50169-2016)）",
+  "keywords": ["防雷接地", "建筑规范", "接地系统"],
+  "createTime": "2025-10-19T10:30:00.000Z",
+  "updateTime": "2025-10-19T10:30:00.000Z",
+  "copyCount": 0,
+  "isPinned": false,
+  "isDeleted": false
+}
+```
+
+### 3. 搜索查询功能
+
+#### 功能需求
+- 点击顶部右侧搜索图标展开搜索框
+- **实时模糊搜索**（使用防抖处理，300ms）
+- **搜索范围**：文本内容 + 关键字
+- **匹配结果高亮**：黄色背景标注匹配文字
+- **搜索状态管理**：
+  - 点击搜索图标：顶部导航栏转换为搜索输入框
+  - 自动获取焦点并弹出键盘
+  - 输入时实时过滤结果
+  - 点击返回或清除：退出搜索，恢复正常导航栏
+- **空状态处理**：
+  - 未输入时显示当前视图的全部数据
+  - 输入后实时过滤
+  - 无匹配结果时显示空状态提示
+
+#### 搜索逻辑
+```typescript
+// 搜索逻辑示例
+const filteredItems = items.filter(item => {
+  const searchLower = searchText.toLowerCase();
+  const textMatch = item.text.toLowerCase().includes(searchLower);
+  const keywordMatch = item.keywords.some(k => 
+    k.toLowerCase().includes(searchLower)
+  );
+  return textMatch || keywordMatch;
+});
+```
+
+#### 列表过滤和排序逻辑
+```typescript
+// 根据当前视图过滤数据
+const getFilteredItems = (items: TextItem[], view: ViewType) => {
+  let filtered = items;
+  
+  switch (view) {
+    case 'all':
+      // 全部笔记：显示未删除的笔记
+      filtered = items.filter(item => !item.isDeleted);
+      break;
+    case 'pinned':
+      // 已置顶：只显示置顶的笔记
+      filtered = items.filter(item => item.isPinned && !item.isDeleted);
+      break;
+    case 'trash':
+      // 回收站：只显示已删除的笔记
+      filtered = items.filter(item => item.isDeleted);
+      break;
+  }
+  
+  // 排序：置顶的在前，然后按创建时间倒序
+  return filtered.sort((a, b) => {
+    // 先按置顶排序
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    
+    // 如果都是置顶，按置顶时间倒序
+    if (a.isPinned && b.isPinned) {
+      return new Date(b.pinnedTime!).getTime() - new Date(a.pinnedTime!).getTime();
+    }
+    
+    // 否则按创建时间倒序
+    return new Date(b.createTime).getTime() - new Date(a.createTime).getTime();
+  });
+};
+```
+
+### 4. 快速复制功能
+
+#### 功能需求
+- 通过长按卡片打开操作菜单，选择"复制内容"
+- 点击复制后将文本内容复制到剪贴板（使用 Clipboard API）
+- **复制成功后**：
+  - 显示 Toast 提示 "复制成功"
+  - 该条数据的复制次数 +1
+  - 立即持久化更新数据
+  - 关闭操作菜单
+- **降级方案**：如果 Clipboard API 不可用，使用 document.execCommand
+- **详情页复制**：在详情页也可以通过"更多操作"按钮快速复制
+
+#### 实现要点
+```typescript
+// 复制功能示例
+const handleCopy = async (text: string, id: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    // 更新复制次数和修改时间
+    updateCopyCount(id);
+    // 显示提示
+    showToast('复制成功');
+    // 关闭操作菜单
+    closeActionSheet();
+  } catch (error) {
+    // 降级方案
+    fallbackCopy(text);
+  }
+};
+```
+
+### 5. 数据持久化
+
+#### LocalStorage 管理
+- **存储键名**：`text-manager-data`
+- **数据结构**：`TextItem[]`
+- **操作时机**：
+  - 页面加载时读取数据
+  - 每次增删改操作后自动保存
+  - 复制次数更新后自动保存
+
+#### 导入导出功能
+
+##### 导出功能
+- 按钮位置：顶部工具栏
+- 导出格式：JSON 文件
+- 文件名：`text-manager-backup-YYYYMMDD.json`
+- 使用 Blob 和下载链接实现
+
+##### 导入功能
+- 上传 JSON 文件
+- **数据校验**：
+  - 验证 JSON 格式
+  - 验证数据结构（必须包含 id, text, keywords 字段）
+  - 验证数据类型
+- **导入策略**：
+  - 合并模式：保留现有数据，添加新数据（ID 冲突时覆盖）
+  - 替换模式：清空现有数据，使用导入数据
+- 导入成功/失败都要有明确提示
+
+#### 错误处理
+- LocalStorage 超出配额（通常 5-10MB）时的提示和处理
+- 数据损坏时的恢复机制
+
+## UI/UX 设计要求
+
+### 移动端适配
+
+#### 响应式设计
+- **适配宽度**：375px - 414px（主流手机屏幕）
+- **viewport 配置**：
+  ```html
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  ```
+- **触摸优化**：
+  - 最小点击区域：44x44px
+  - 按钮间距：至少 8px
+  - 支持长按、滑动手势
+- **性能优化**：
+  - 使用 CSS `transform` 做动画
+  - 避免重排重绘
+  - 平滑滚动
+
+### 界面布局
+
+```
+┌──────────────────────────┐
+│ ☰  文本管理          🔍  │  ← 顶部导航栏（左：菜单，右：搜索）
+├──────────────────────────┤
+│                          │
+│ ┌────────────────────┐   │
+│ │ 预计将来会有防雷击电 │   │  ← 文本卡片（可长按）
+│ │ 磁脉冲的电气和电子系 │   │     点击进入详情页
+│ │ 统，应在设计时...   │   │     超过2行省略
+│ │                    │   │
+│ │ #防雷接地 #建筑规范 │   │  ← 关键字标签
+│ │                    │   │
+│ │ 2025-10-19         │   │  ← 左下角时间（小字体）
+│ └────────────────────┘   │
+│                          │
+│ ┌────────────────────┐   │
+│ │ 住宅建筑应按套型设计 │   │
+│ │ 套内空间和设施应能满 │   │
+│ │ 足安全、舒适...     │   │
+│ │ #住宅设计 #套型设计 │   │
+│ │ 2025-10-18         │   │
+│ └────────────────────┘   │
+│                          │
+│ ┌────────────────────┐   │
+│ │ ...                │   │
+│ └────────────────────┘   │
+│                          │
+│              ➕          │  ← 底部浮动按钮（添加新文本）
+└──────────────────────────┘
+
+【搜索展开状态】
+┌──────────────────────────┐
+│ ← 🔍 搜索关键字或文本... ✕│  ← 展开的搜索栏
+├──────────────────────────┤
+│    （搜索结果列表）       │
+└──────────────────────────┘
+
+【长按弹窗】
+┌──────────────────────────┐
+│  📋 复制内容             │
+│  ☑️ 多选                 │
+│  📌 置顶                 │
+│  🗑️ 移动到回收站         │
+└──────────────────────────┘
+
+【侧边栏】
+┌──────────────────────────┐
+│  📝 全部笔记             │
+│  📌 已置顶               │
+│  🗑️ 回收站               │
+│  ⚙️ 设置                 │
+│  📤 导出数据             │
+│  📥 导入数据             │
+└──────────────────────────┘
+```
+
+### 样式风格
+
+#### 设计系统
+- **主题色**：蓝色系 `#1890ff`
+- **成功色**：`#52c41a`
+- **警告色**：`#faad14`
+- **错误色**：`#ff4d4f`
+- **中性色**：
+  - 主文本：`#262626`
+  - 次级文本：`#8c8c8c`
+  - 边框：`#d9d9d9`
+  - 背景：`#f5f5f5`
+
+#### 组件样式
+- **卡片**：
+  - 背景：白色
+  - 圆角：8px
+  - 阴影：`0 2px 8px rgba(0,0,0,0.08)`
+  - 内边距：16px
+  - 外边距：12px 16px
+
+- **按钮**：
+  - 圆角：6px
+  - 主按钮：蓝色背景，白色文字
+  - 次级按钮：白色背景，蓝色边框和文字
+  - 危险按钮：红色背景，白色文字
+
+- **输入框**：
+  - 圆角：6px
+  - 边框：1px solid #d9d9d9
+  - 聚焦：边框变蓝色，添加阴影
+
+- **标签**：
+  - 胶囊形状（border-radius: 12px）
+  - 多种颜色（蓝、绿、橙、紫等）
+  - 字号：12px
+  - 内边距：4px 12px
+
+#### 字体
+```css
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 
+             'Helvetica Neue', Arial, sans-serif;
+```
+
+#### 动画效果
+- **过渡时间**：200-300ms
+- **缓动函数**：ease-in-out
+- **应用场景**：
+  - 卡片展开/收起
+  - 按钮点击反馈
+  - Toast 提示
+  - 搜索结果更新
+
+### 交互细节
+
+#### 顶部导航栏
+- **左侧菜单图标**：点击打开侧边栏（从左侧滑出）
+- **右侧搜索图标**：点击后顶部导航栏变为搜索输入框
+  - 显示返回箭头、搜索输入框、清除按钮
+  - 自动获取焦点，弹出键盘
+  - 输入时实时过滤结果（防抖 300ms）
+  - 点击返回箭头或清除后恢复原状态
+
+#### 侧边栏
+- 从左侧滑出（支持滑动手势）
+- 菜单项：
+  - 📝 全部笔记（默认视图）
+  - 📌 已置顶（显示置顶的笔记）
+  - 🗑️ 回收站（显示已删除的笔记，可恢复或永久删除）
+  - ⚙️ 设置（应用设置）
+  - 📤 导出数据（导出 JSON）
+  - 📥 导入数据（导入 JSON）
+- 点击菜单项后侧边栏自动关闭，切换到对应视图
+
+#### 搜索功能
+- 点击搜索图标展开搜索栏
+- **实时模糊搜索**（防抖 300ms）
+- **搜索范围**：文本内容 + 关键字
+- **匹配结果高亮**：黄色背景标注匹配文字
+- 搜索结果数量提示："找到 5 条结果"
+- 无结果时显示空状态图标和提示文字
+- 点击返回或清除按钮退出搜索
+
+#### 文本卡片
+- **默认状态**：显示文本前 2 行，超出省略（...）
+- **显示内容**：
+  - 文本预览（最多2行）
+  - 关键字标签（胶囊形式）
+  - 左下角时间（小字体，格式：YYYY-MM-DD）
+  - 右上角置顶图标（如果已置顶，显示 📌 图标）
+- **点击卡片**：打开详情浮层页面（全屏展示完整内容）
+- **长按卡片**：弹出操作菜单（ActionSheet）
+  - 📋 复制内容：复制文本到剪贴板，复制次数 +1
+  - ☑️ 多选：进入多选模式（可批量操作）
+  - 📌 置顶/取消置顶：置顶此笔记显示在列表顶部，或取消置顶
+  - 🗑️ 移动到回收站：将笔记移到回收站（可恢复）
+- **高亮效果**：搜索时匹配的文字黄色背景高亮
+- **视觉状态**：
+  - 置顶笔记：右上角显示图钉图标，可选：背景色稍有区别
+  - 普通笔记：无特殊标识
+
+#### 详情浮层页面
+- **打开方式**：点击文本卡片从底部滑入（全屏）
+- **显示内容**：
+  - 顶部：返回按钮、编辑按钮、更多操作按钮（三点）
+  - 内容区：完整文本内容（可滚动）
+  - 关键字标签区域
+  - 底部元数据：创建时间、修改时间、复制次数
+- **操作**：
+  - 点击返回：关闭浮层
+  - 点击编辑：进入编辑模式
+  - 点击更多：弹出操作菜单（同长按菜单）
+  - 支持下滑关闭手势
+
+#### 编辑器对话框
+- **打开方式**：
+  - 点击底部 "+" 浮动按钮（新建）
+  - 点击详情页编辑按钮（编辑）
+- **显示方式**：全屏弹出（移动端友好）
+- **包含字段**：
+  - 顶部操作栏：取消、标题（新建笔记/编辑笔记）、保存
+  - 文本内容（多行文本框，自动扩展高度，占据主要空间）
+  - 关键字输入区域：
+    - 输入框（支持回车、逗号分隔添加标签）
+    - 已添加关键字列表（胶囊形式，点击 × 删除）
+- **操作**：
+  - 点击取消：确认是否放弃更改
+  - 点击保存：验证并保存数据，关闭对话框
+  - 支持下滑关闭手势（需确认）
+
+#### 多选模式
+- **进入方式**：长按卡片选择"多选"
+- **界面变化**：
+  - 顶部显示选中数量和取消按钮
+  - 每张卡片左侧显示复选框
+  - 底部显示批量操作按钮（删除、置顶、导出）
+- **操作**：
+  - 点击卡片切换选中状态
+  - 点击批量操作按钮执行相应操作
+  - 点击取消退出多选模式
+
+#### 回收站
+- **显示内容**：已删除的笔记列表
+- **操作**：
+  - 长按笔记：恢复、永久删除
+  - 底部按钮：清空回收站（需二次确认）
+- **自动清理**：30天后自动永久删除
+
+#### 删除确认
+- 使用原生确认对话框或底部弹窗（ActionSheet）
+- **移到回收站**：
+  - 提示："移动到回收站？可在30天内恢复"
+  - 按钮：取消、移动到回收站
+- **永久删除**：
+  - 提示："确定永久删除？此操作不可恢复"
+  - 按钮：取消、永久删除（红色）
+
+## 示例数据
+
+项目初始化时提供以下示例数据：
+
+```typescript
+const initialData: TextItem[] = [
+  {
+    id: "1",
+    text: "预计将来会有防雷击电磁脉冲的电气和电子系统，应在设计时将建筑物的金属支撑物、金属框架或钢筋混泥土的钢筋自然构件、金属管道、配电的保护接地系统与防雷装置组成一个接地系统，并应在需要处预埋电位连接板。—公配房、环网室的接地系统建议与建筑主体的接地系统连在一起。（《建筑防雷设计规范》(GB50057-2010)、《电气装置安装工程 接地装置施工及验收规范》(GB50169-2016)）",
+    keywords: ["防雷接地", "建筑规范", "接地系统"],
+    createTime: "2025-10-19T10:30:00.000Z",
+    updateTime: "2025-10-19T10:30:00.000Z",
+    copyCount: 0,
+    isPinned: false,
+    isDeleted: false
+  },
+  {
+    id: "2",
+    text: "住宅建筑应按套型设计，套内空间和设施应能满足安全、舒适、卫生等生活起居需求。套型应由卧室、起居室(厅)、厨房和卫生间等组成。（《住宅设计规范》GB50096-2011）",
+    keywords: ["住宅设计", "套型设计", "建筑规范"],
+    createTime: "2025-10-18T14:20:00.000Z",
+    updateTime: "2025-10-18T14:20:00.000Z",
+    copyCount: 2,
+    isPinned: false,
+    isDeleted: false
+  },
+  {
+    id: "3",
+    text: "建筑高度大于100m的民用建筑，其楼板的耐火极限不应低于2.00h。（《建筑设计防火规范》GB50016-2014）",
+    keywords: ["防火规范", "高层建筑", "耐火极限"],
+    createTime: "2025-10-17T09:15:00.000Z",
+    updateTime: "2025-10-17T09:15:00.000Z",
+    copyCount: 5,
+    isPinned: true,
+    pinnedTime: "2025-10-20T08:00:00.000Z",
+    isDeleted: false
+  },
+  {
+    id: "4",
+    text: "电梯井、电缆井应分别独立设置。电缆井、管道井、排烟道、排气道、垃圾道等竖向井道，应分别独立设置，井壁的耐火极限不应低于1.00h。（《建筑设计防火规范》GB50016-2014）",
+    keywords: ["电梯井", "电缆井", "防火规范"],
+    createTime: "2025-10-16T16:45:00.000Z",
+    updateTime: "2025-10-16T16:45:00.000Z",
+    copyCount: 1,
+    isPinned: false,
+    isDeleted: false
+  }
+];
+```
+
+## 技术实现要点
+
+### 1. TypeScript 配置
+
+#### tsconfig.json
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    
+    /* 允许隐式 any */
+    "noImplicitAny": false,
+    
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
+```
+
+#### package.json
+```json
+{
+  "name": "jacky-pwa",
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  }
+}
+```
+
+### 3. 错误处理
+
+#### LocalStorage 处理
+```typescript
+function safeSetItem(key: string, value: any) {
+  try {
+    const serialized = JSON.stringify(value);
+    localStorage.setItem(key, serialized);
+    return true;
+  } catch (error) {
+    if (error.name === 'QuotaExceededError') {
+      alert('存储空间已满，请导出数据后清理');
+    } else {
+      console.error('存储失败：', error);
+    }
+    return false;
+  }
+}
+```
+
+#### 导入数据校验
+```typescript
+function validateImportData(data: any): boolean {
+  if (!Array.isArray(data)) return false;
+  
+  return data.every(item => {
+    return (
+      typeof item.id === 'string' &&
+      typeof item.text === 'string' &&
+      Array.isArray(item.keywords) &&
+      typeof item.createTime === 'string' &&
+      typeof item.updateTime === 'string' &&
+      typeof item.copyCount === 'number' &&
+      typeof item.isPinned === 'boolean' &&
+      typeof item.isDeleted === 'boolean'
+    );
+  });
+}
+```
+
+#### 回收站自动清理
+```typescript
+// 检查并清理超过30天的已删除笔记
+function autoCleanTrash(items: TextItem[]): TextItem[] {
+  const now = new Date().getTime();
+  const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+  
+  return items.filter(item => {
+    if (item.isDeleted && item.deletedTime) {
+      const deletedTime = new Date(item.deletedTime).getTime();
+      const daysSinceDeleted = (now - deletedTime) / (24 * 60 * 60 * 1000);
+      
+      // 如果超过30天，永久删除（从数组中移除）
+      if (daysSinceDeleted > 30) {
+        return false;
+      }
+    }
+    return true;
+  });
+}
+
+// 在应用启动时执行
+// 在每次数据加载时执行
+```
+
+### 4. 可访问性
+
+#### 语义化 HTML
+```html
+<main role="main">
+  <header role="banner">
+    <h1>文本管理系统</h1>
+  </header>
+  
+  <section role="search">
+    <input 
+      type="search" 
+      aria-label="搜索文本或关键字"
+      placeholder="搜索..." 
+    />
+  </section>
+  
+  <section role="region" aria-label="文本列表">
+    <!-- 文本卡片列表 -->
+  </section>
+</main>
+```
+
+#### ARIA 标签
+```jsx
+<button 
+  aria-label="复制文本"
+  onClick={handleCopy}
+>
+  📋
+</button>
+
+<button 
+  aria-label="删除文本"
+  onClick={handleDelete}
+>
+  🗑️
+</button>
+```
+
+## 额外功能建议（可选）
+
+### 1. 分类管理
+- 支持创建自定义分类
+- 文本可归属到某个分类
+- 按分类筛选查看
+
+### 2. 排序功能
+- 按创建时间排序（升序/降序）
+- 按复制次数排序
+- 按关键字数量排序
+
+### 3. 批量操作
+- 多选模式
+- 批量删除
+- 批量导出选中项
+
+### 4. 收藏功能
+- 标记常用文本为收藏
+- 快速查看收藏列表
+
+### 5. 统计面板
+- 总文本数量
+- 总关键字数量
+- 复制次数排行
+- 使用频率图表
+
+## 开发步骤建议
+
+### 第一阶段：项目初始化和基础配置
+
+1. **初始化项目**
+   - 使用 Vite 创建 React + TypeScript 项目
+   - 安装必要依赖（Ant Design Mobile 或 Vant React）
+   - 安装其他依赖（uuid、dayjs 等）
+
+2. **配置基础环境**
+   - 配置 tsconfig.json（支持隐式 any）
+   - 配置 package.json（type: "module"）
+   - 设置移动端 viewport
+   - 配置 CSS 重置和全局样式
+
+### 第二阶段：数据层开发
+
+3. **定义类型系统**
+   - 创建 TextItem 接口（包含所有字段）
+   - 创建 ViewType 类型（'all' | 'pinned' | 'trash'）
+   - 创建其他必要的类型定义
+
+4. **实现工具函数**
+   - storage.ts：localStorage 读写、错误处理
+   - copy.ts：复制功能、降级方案
+   - highlight.ts：文本高亮处理
+   - date.ts：日期格式化
+   - trash.ts：回收站自动清理
+
+5. **创建自定义 Hooks**
+   - useLocalStorage：数据持久化管理
+   - useSearch：搜索和防抖
+   - useLongPress：长按手势检测
+   - useSwipe：滑动手势（侧边栏、详情页）
+
+### 第三阶段：UI 组件开发
+
+6. **基础组件**
+   - KeywordTag：关键字标签（彩色胶囊）
+   - EmptyState：空状态提示
+   - FloatingButton：底部浮动按钮
+
+7. **布局组件**
+   - Header：顶部导航栏（两种状态：正常/搜索）
+   - Sidebar：侧边栏（菜单列表）
+   - SearchBar：搜索栏组件
+
+8. **核心组件**
+   - TextCard：文本卡片（支持长按）
+   - TextDetail：详情浮层页面
+   - TextEditor：编辑器对话框
+   - ActionSheet：操作菜单
+
+### 第四阶段：功能实现
+
+9. **主界面功能**
+   - 列表渲染和过滤（按视图类型）
+   - 列表排序（置顶优先、时间倒序）
+   - 搜索功能（实时过滤、高亮）
+
+10. **导航和视图切换**
+    - 侧边栏打开/关闭
+    - 视图切换（全部/置顶/回收站）
+    - 搜索模式切换
+
+11. **文本操作功能**
+    - 添加文本（底部浮动按钮）
+    - 编辑文本（详情页编辑按钮）
+    - 删除文本（移到回收站）
+    - 复制文本（更新复制次数）
+    - 置顶/取消置顶
+
+12. **批量操作功能**
+    - 多选模式切换
+    - 批量删除
+    - 批量置顶
+    - 批量导出
+
+13. **回收站功能**
+    - 显示已删除笔记
+    - 恢复笔记
+    - 永久删除
+    - 清空回收站
+    - 自动清理（30天）
+
+14. **导入导出功能**
+    - 导出数据（JSON 文件）
+    - 导入数据（校验、合并/替换）
+
+### 第五阶段：优化和完善
+
+15. **UI/UX 优化**
+    - 响应式布局适配
+    - 动画效果（过渡、滑动）
+    - 交互反馈（Toast、Loading、确认对话框）
+    - 触摸手势优化
+
+16. **性能优化**
+    - 使用 React.memo 优化组件
+    - 使用 useCallback 和 useMemo
+    - 虚拟滚动（可选）
+    - 懒加载（可选）
+
+17. **错误处理和健壮性**
+    - LocalStorage 配额处理
+    - 数据校验和恢复
+    - 网络错误处理
+    - 边界情况处理
+
+18. **测试和调试**
+    - 移动端设备测试
+    - 不同屏幕尺寸适配
+    - 性能监控
+    - Bug 修复
+
+## 交付内容
+
+请生成完整的项目代码，包括：
+
+1. ✅ 所有配置文件（package.json, tsconfig.json, vite.config.ts等）
+2. ✅ 完整的源代码（src 目录下所有文件）
+3. ✅ 必要的样式文件（CSS 或 styled-components）
+4. ✅ README.md（项目说明和运行指南）
+5. ✅ 示例数据初始化代码
+6. ✅ 注释清晰的代码实现
+
+## 质量要求
+
+- 代码结构清晰，组件职责单一
+- TypeScript 类型定义完整
+- 移动端体验流畅
+- 错误处理完善
+- 性能优化到位
+- 注释充分，便于维护
+
+---
+
+**备注**：这是一个生产级的移动端应用，请确保代码质量、用户体验和性能都达到较高标准。
+

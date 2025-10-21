@@ -1,0 +1,101 @@
+.text-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin: 12px 16px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  border: 2px solid transparent;
+}
+
+.text-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.text-card--pinned {
+  border-color: #1890ff;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%);
+}
+
+.text-card--selected {
+  border-color: #52c41a;
+  background: #f6ffed;
+}
+
+.text-card__checkbox {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 1;
+}
+
+.text-card__checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: #52c41a;
+}
+
+.text-card__content {
+  margin-left: 0;
+}
+
+.text-card--with-checkbox .text-card__content {
+  margin-left: 24px;
+}
+
+.text-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.text-card__preview {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #262626;
+  margin-right: 8px;
+}
+
+.text-card__preview mark {
+  background-color: #fffbe6;
+  color: #262626;
+  padding: 1px 2px;
+  border-radius: 2px;
+}
+
+.text-card__pinned-icon {
+  font-size: 16px;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.text-card__keywords {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  gap: 4px;
+}
+
+.text-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.text-card__date {
+  font-weight: 500;
+}
+
+.text-card__copy-count {
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 11px;
+}
